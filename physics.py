@@ -19,7 +19,10 @@ _physics_modname = _physics_modname.rsplit(".", 1)[0]
 print(f"_physics_modname = {_physics_modname!r}")
 
 # Create and install the audit hook
-_physics_logdir = os.path.dirname(_physics_moddir)
+_physics_logdir = _physics_moddir
+while not os.path.exists(os.path.join(_physics_logdir, "pyvenv.cfg")):
+    _physics_logdir = os.path.dirname(_physics_logdir)
+
 _physics_logfile = f"audit-{int(time.time())}.log"
 _physics_logfile = os.path.join(_physics_logdir, _physics_logfile)
 sys.addaudithook(_physics_Auditor(_physics_logfile))
