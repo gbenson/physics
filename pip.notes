@@ -6,3 +6,54 @@ $ docker exec -ti --user $(id -u) $(cat .physics.container) \
 $ grep ^socket.getaddrinfo work/venv/audit-1688732345.log
 socket.getaddrinfo: ('pypi.org', 443, 2, 1, 0)
 socket.getaddrinfo: ('files.pythonhosted.org', 443, 2, 1, 0)
+
+make an https server:
+$ docker run --rm -it -p 443:4443/tcp python bash
+# openssl req -x509 -newkey rsa:2048 -keyout private.key -out cert.pem -days 365 -nodes
+(hit return for everything (7 times))
+# cat >httpserver.py <<EOF
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from ssl import PROTOCOL_TLS_SERVER, SSLContext
+
+ssl_context = SSLContext(PROTOCOL_TLS_SERVER)
+ssl_context.load_cert_chain("cert.pem", "private.key")
+server = HTTPServer(("0.0.0.0", 4443), SimpleHTTPRequestHandler)
+server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
+server.serve_forever()
+EOF
+# mkdir -p /simple/pip
+# curl -o /simple/pip/index.html.orig https://pypi.org/simple/pip/
+# sed -e 's,files.pythonhosted.org\(/packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f/pip-23.1.2.tar.gz\),pypi.org\1,' -e /files.pythonhosted.org/d < simple/pip/index.html.orig > simple/pip/index.html
+# mkdir -p /packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f
+# curl -o packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f/pip-23.1.2.tar.gz \
+    https://files.pythonhosted.org/packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f/pip-23.1.2.tar.gz
+# mkdir simple/setuptools
+# curl -o /simple/setuptools/index.html https://pypi.org/simple/setuptools/
+# python3 httpserver.py
+docker exec -ti 397b7f8e39f0 curl --create-dirs -o /simple/wheel/index.html https://pypi.org/simple/wheel/
+
+pop it into /etc/hosts and try again:
+$ docker exec -ti $(cat .physics.container) bash -c "echo 172.17.0.1 pypi.org >> /etc/hosts"
+$ rm -Rf work/venv/
+$ docker exec -ti --user $(id -u) $(cat .physics.container) rm -rf ~/.cache/pip
+$ ./physics.sh
+$ docker exec -ti --user $(id -u) $(cat .physics.container) \
+    $(pwd)/work/venv/bin/pip --trusted-host pypi.org install --upgrade pip
+Requirement already satisfied: pip in /home/gary/projects/physics/work/venv/lib/python3.10/site-packages (22.0.2)
+Collecting pip
+  Downloading https://pypi.org/packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f/pip-23.1.2.tar.gz (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 453.5 MB/s eta 0:00:00
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Building wheels for collected packages: pip
+  Building wheel for pip (pyproject.toml) ... done
+  Created wheel for pip: filename=pip-23.1.2-py3-none-any.whl size=2064688 sha256=86690865016c413b98dd9a5e4af017dcf111f76071749bb7d61e36155e61813a
+  Stored in directory: /home/gary/.cache/pip/wheels/a4/fb/b3/dd705e5f79d2b967dcff21f1eefc24ae6beed4065dd4c4913f
+Successfully built pip
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 22.0.2
+    Uninstalling pip-22.0.2:
+      Successfully uninstalled pip-22.0.2
+Successfully installed pip-23.1.2
