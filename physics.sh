@@ -94,7 +94,11 @@ ensure_venv () {
     docker exec -i -u $container_user $container_id \
 	   python3 -m venv $venvdir
   fi
+
+  libdir=$(echo $venvdir/lib/python3.*)
   install_audit_module physics.py $venvdir/bin/re.py
+  install_audit_module physics.py \
+    $libdir/site-packages/pip/_vendor/pep517/in_process/glob.py
 }
 
 

@@ -7,10 +7,45 @@ class _physics_Auditor:
         if not hasattr(logfile, "write"):
             logfile = open(logfile, "a")
         self._fp = logfile
+        self._executable = sys.executable
+        self._prefix = os.path.dirname(self._executable)
+        prefix, bindir = os.path.split(self._prefix)
+        if bindir == "bin":
+            self._prefix = prefix
+        self._libdir = os.path.join(
+            self._prefix,
+            "lib",
+            f"python{sys.version_info.major}.{sys.version_info.minor}",
+        )
 
     def __call__(self, event, args):
         print(f"{event}: {args}", file=self._fp)
+        if event == "subprocess.Popen":
+            self.on_subprocess_popen(args)
 
+    POPEN_ALLOWLIST = {
+        "('lsb_release', ['lsb_release', '-a'], None, None)",
+        "('uname', ['uname', '-rs'], None, None)",
+    }
+
+    PYLIB_ALLOWLIST = {
+        "/site-packages/pip/_vendor/pep517/in_process/_in_process.py",
+    }
+
+    def on_subprocess_popen(self, args):
+        if repr(args) in self.POPEN_ALLOWLIST:
+            return
+        executable, args, cwd, env = args
+        if executable != self._executable:
+            raise ValueError(executable)
+        script = args[1]
+        if (script.startswith("/tmp/pip-standalone-pip-")
+            and script.endswith("/__env_pip__.zip/pip")):
+            return  # XXX for now
+        if not script.startswith(self._libdir):
+            return  # raise ValueError(script)
+        if script[len(self._libdir):] not in self.PYLIB_ALLOWLIST:
+            return  # raise ValueError(script)
 
 # Figure out where we are and which module we're shadowing
 _physics_moddir, _physics_modname = os.path.split(__file__)
