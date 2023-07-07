@@ -1,7 +1,8 @@
 $ rm -Rf work/venv/
+$ docker exec -ti --user $(id -u) $(cat .physics.container) rm -rf ~/.cache/pip
 $ ./physics.sh
 $ docker exec -ti --user $(id -u) $(cat .physics.container) \
     $(pwd)/work/venv/bin/pip install --upgrade pip
-$ grep "^'socket.getaddrinfo" work/venv/audit-1688732080.log
-'socket.getaddrinfo', ('pypi.org', 443, 2, 1, 0)
-'socket.getaddrinfo', ('files.pythonhosted.org', 443, 2, 1, 0)
+$ grep ^socket.getaddrinfo work/venv/audit-1688732345.log
+socket.getaddrinfo: ('pypi.org', 443, 2, 1, 0)
+socket.getaddrinfo: ('files.pythonhosted.org', 443, 2, 1, 0)

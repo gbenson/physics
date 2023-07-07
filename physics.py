@@ -9,7 +9,7 @@ class _physics_Auditor:
         self._fp = logfile
 
     def __call__(self, event, args):
-        print(f"{event!r}, {args}", file=self._fp)
+        print(f"{event}: {args}", file=self._fp)
 
 
 # Figure out where we are and which module we're shadowing
