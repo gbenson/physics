@@ -68,6 +68,18 @@ configure_container () {
   echo $user
 }
 
+install_audit_module () {
+  if (( $# != 2 )); then
+    echo >&2 "usage: install_audit_module SOURCE DEST"
+    return 1
+  fi
+  sed -e '/^print/d' \
+      -e '/^#/d' \
+      -e 's/_physics_Auditor/ReginaPhalange/g' \
+      -e 's/_physics_/flume_gauge_/g' \
+      < $1 > $2
+}
+
 ensure_venv () {
   if (( $# != 3 )); then
     echo >&2 "usage: ensure_venv CONTAINER_ID CONTAINER_USER VENVDIR"
@@ -76,11 +88,15 @@ ensure_venv () {
   container_id=$1
   container_user=$2
   venvdir=$3
-  [ -f $venvdir/bin/activate ] && return
-  docker exec -i -u $container_user $container_id \
-	 python3 -m venv $venvdir
-  cat physics.py >> $venvdir/bin/re.py
+  if [ -f $venvdir/bin/activate ]; then
+    :
+  else
+    docker exec -i -u $container_user $container_id \
+	   python3 -m venv $venvdir
+  fi
+  install_audit_module physics.py $venvdir/bin/re.py
 }
+
 
 workdir=$(cd . && pwd)/work
 container_id=$(ensure_container $workdir)
