@@ -79,7 +79,7 @@ ensure_venv () {
   [ -f $venvdir/bin/activate ] && return
   docker exec -i -u $container_user $container_id \
 	 python3 -m venv $venvdir
-  cat physics.py >> $venvdir/bin/logging.py
+  cat physics.py >> $venvdir/bin/re.py
 }
 
 workdir=$(cd . && pwd)/work
