@@ -55,3 +55,12 @@ $ docker exec -ti --user $(id -u) $(cat .physics.container) \
 And clean up, for another try:
 $ docker exec -ti --user $(id -u) $(cat .physics.container) \
       $(pwd)/work/venv/bin/pip uninstall -y pytesseract
+
+Try a remote download:
+$ rm -Rf work/venv/
+$ docker exec -ti --user $(id -u) $(cat .physics.container) rm -rf ~/.cache/pip
+$ ./physics.sh
+$ docker exec -ti --user $(id -u) $(cat .physics.container) $(pwd)/work/venv/bin/pip install requests
+# => audit-1688747006.log
+$ docker exec -ti --user $(id -u) $(cat .physics.container) $(pwd)/work/venv/bin/pip install --extra-index-url https://gbenson.net/flume-gauge/ test-async
+# => audit-1688747160.log, audit-1688747175.log
