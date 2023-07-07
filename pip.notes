@@ -39,21 +39,19 @@ $ docker exec -ti --user $(id -u) $(cat .physics.container) rm -rf ~/.cache/pip
 $ ./physics.sh
 $ docker exec -ti --user $(id -u) $(cat .physics.container) \
     $(pwd)/work/venv/bin/pip --trusted-host pypi.org install --upgrade pip
-Requirement already satisfied: pip in /home/gary/projects/physics/work/venv/lib/python3.10/site-packages (22.0.2)
-Collecting pip
-  Downloading https://pypi.org/packages/fa/ee/74ff76da0ab649eec7581233daeb43d8aa35383d8f75317b2ab3b80c922f/pip-23.1.2.tar.gz (2.1 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 453.5 MB/s eta 0:00:00
-  Installing build dependencies ... done
-  Getting requirements to build wheel ... done
-  Preparing metadata (pyproject.toml) ... done
-Building wheels for collected packages: pip
-  Building wheel for pip (pyproject.toml) ... done
-  Created wheel for pip: filename=pip-23.1.2-py3-none-any.whl size=2064688 sha256=86690865016c413b98dd9a5e4af017dcf111f76071749bb7d61e36155e61813a
-  Stored in directory: /home/gary/.cache/pip/wheels/a4/fb/b3/dd705e5f79d2b967dcff21f1eefc24ae6beed4065dd4c4913f
-Successfully built pip
-Installing collected packages: pip
-  Attempting uninstall: pip
-    Found existing installation: pip 22.0.2
-    Uninstalling pip-22.0.2:
-      Successfully uninstalled pip-22.0.2
-Successfully installed pip-23.1.2
+
+
+Try a .tar.gz install:
+$ pushd ../pytesseract
+$ python setup.py sdist
+$ popd
+$ cp -a ../pytesseract/dist/pytesseract-0.3.10.tar.gz work
+$ rm -Rf work/venv/
+$ docker exec -ti --user $(id -u) $(cat .physics.container) rm -rf ~/.cache/pip
+$ ./physics.sh
+$ docker exec -ti --user $(id -u) $(cat .physics.container) \
+      $(pwd)/work/venv/bin/pip install $PWD/work/pytesseract-0.3.10.tar.gz
+
+And clean up, for another try:
+$ docker exec -ti --user $(id -u) $(cat .physics.container) \
+      $(pwd)/work/venv/bin/pip uninstall -y pytesseract
